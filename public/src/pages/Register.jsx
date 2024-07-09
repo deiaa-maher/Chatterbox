@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import styled from "styled-components";
 import { useNavigate, Link } from "react-router-dom";
-import Logo from "../assets/logo.svg";
+import Logo from "../assets/logo.svg"; // Ensure this path is correct
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { registerRoute } from "../utils/APIRoutes";
@@ -27,7 +27,7 @@ export default function Register() {
     if (localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)) {
       navigate("/");
     }
-  }, []);
+  }, [navigate]);
 
   const handleChange = (event) => {
     setValues({ ...values, [event.target.name]: event.target.value });
@@ -36,28 +36,18 @@ export default function Register() {
   const handleValidation = () => {
     const { password, confirmPassword, username, email } = values;
     if (password !== confirmPassword) {
-      toast.error(
-        "Password and confirm password should be same.",
-        toastOptions
-      );
+      toast.error("Passwords do not match.", toastOptions);
       return false;
     } else if (username.length < 3) {
-      toast.error(
-        "Username should be greater than 3 characters.",
-        toastOptions
-      );
+      toast.error("Username must be at least 3 characters.", toastOptions);
       return false;
     } else if (password.length < 8) {
-      toast.error(
-        "Password should be equal or greater than 8 characters.",
-        toastOptions
-      );
+      toast.error("Password must be at least 8 characters.", toastOptions);
       return false;
     } else if (email === "") {
       toast.error("Email is required.", toastOptions);
       return false;
     }
-
     return true;
   };
 
@@ -65,21 +55,25 @@ export default function Register() {
     event.preventDefault();
     if (handleValidation()) {
       const { email, username, password } = values;
-      const { data } = await axios.post(registerRoute, {
-        username,
-        email,
-        password,
-      });
+      try {
+        const { data } = await axios.post(registerRoute, {
+          username,
+          email,
+          password,
+        });
 
-      if (data.status === false) {
-        toast.error(data.msg, toastOptions);
-      }
-      if (data.status === true) {
-        localStorage.setItem(
-          process.env.REACT_APP_LOCALHOST_KEY,
-          JSON.stringify(data.user)
-        );
-        navigate("/");
+        if (data.status === false) {
+          toast.error(data.msg, toastOptions);
+        } else if (data.status === true) {
+          localStorage.setItem(
+            process.env.REACT_APP_LOCALHOST_KEY,
+            JSON.stringify(data.user)
+          );
+          navigate("/");
+        }
+      } catch (error) {
+        console.error("Registration failed:", error);
+        toast.error("Registration failed. Please try again later.", toastOptions);
       }
     }
   };
@@ -87,38 +81,46 @@ export default function Register() {
   return (
     <>
       <FormContainer>
-        <form action="" onSubmit={(event) => handleSubmit(event)}>
+        <form onSubmit={handleSubmit}>
           <div className="brand">
-            <img src={Logo} alt="logo" />
-            <h1>snappy</h1>
+            <img src={Logo} alt="Chatterbox Logo" />
+            <h1>Chatterbox</h1> {/* Updated from "snappy" */}
           </div>
           <input
             type="text"
             placeholder="Username"
             name="username"
-            onChange={(e) => handleChange(e)}
+            value={values.username}
+            onChange={handleChange}
+            required
           />
           <input
             type="email"
             placeholder="Email"
             name="email"
-            onChange={(e) => handleChange(e)}
+            value={values.email}
+            onChange={handleChange}
+            required
           />
           <input
             type="password"
             placeholder="Password"
             name="password"
-            onChange={(e) => handleChange(e)}
+            value={values.password}
+            onChange={handleChange}
+            required
           />
           <input
             type="password"
             placeholder="Confirm Password"
             name="confirmPassword"
-            onChange={(e) => handleChange(e)}
+            value={values.confirmPassword}
+            onChange={handleChange}
+            required
           />
           <button type="submit">Create User</button>
           <span>
-            Already have an account ? <Link to="/login">Login.</Link>
+            Already have an account? <Link to="/login">Login.</Link>
           </span>
         </form>
       </FormContainer>
@@ -133,65 +135,73 @@ const FormContainer = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 1rem;
   align-items: center;
   background-color: #131324;
+  padding: 2rem;
+
   .brand {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 1rem;
-    justify-content: center;
+    margin-bottom: 2rem;
+
     img {
       height: 5rem;
+      margin-bottom: 1rem;
     }
+
     h1 {
       color: white;
       text-transform: uppercase;
+      font-size: 1.5rem;
     }
   }
 
   form {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
-    background-color: #00000076;
-    border-radius: 2rem;
-    padding: 3rem 5rem;
+    gap: 1rem;
+    width: 100%;
+    max-width: 400px;
   }
+
   input {
     background-color: transparent;
     padding: 1rem;
     border: 0.1rem solid #4e0eff;
     border-radius: 0.4rem;
     color: white;
-    width: 100%;
     font-size: 1rem;
+
     &:focus {
-      border: 0.1rem solid #997af0;
+      border-color: #997af0;
       outline: none;
     }
   }
+
   button {
     background-color: #4e0eff;
     color: white;
-    padding: 1rem 2rem;
+    padding: 1rem;
     border: none;
-    font-weight: bold;
-    cursor: pointer;
     border-radius: 0.4rem;
     font-size: 1rem;
+    cursor: pointer;
     text-transform: uppercase;
+
     &:hover {
-      background-color: #4e0eff;
+      background-color: #3a0cc0;
     }
   }
+
   span {
     color: white;
-    text-transform: uppercase;
+    text-align: center;
+
     a {
       color: #4e0eff;
-      text-decoration: none;
       font-weight: bold;
+      text-decoration: none;
     }
   }
 `;
